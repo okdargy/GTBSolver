@@ -52,7 +52,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
-          path: build/libs/*.jar
+          path: versions/*/build/libs/*.jar
 
   release:
     name: Create Release
@@ -68,12 +68,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
-          path: build/libs/
+          path: versions/*/build/libs/
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: versions/1.8.9-forge/build/libs/*.jar
+          files: versions/*/build/libs/*.jar
           generate_release_notes: true
           draft: false
           prerelease: false
