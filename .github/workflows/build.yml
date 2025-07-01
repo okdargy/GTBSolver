@@ -52,7 +52,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
-          path: versions/*/build/libs/*.jar
+          path: |
+            versions/*/build/libs/*.jar
+            !versions/*/build/libs/*-dev.jar
+            !versions/*/build/libs/*-sources.jar
 
   release:
     name: Create Release
@@ -68,14 +71,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
-          path: versions/*/build/libs/
+          path: artifacts/
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: versions/*/build/libs/*.jar
+          files: artifacts/*.jar
           generate_release_notes: true
           draft: false
           prerelease: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
