@@ -9,6 +9,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class BuildBattleHud extends TextHud {
     
@@ -16,6 +19,8 @@ public class BuildBattleHud extends TextHud {
     private List<String> wordList = new ArrayList<>();
     private String currentClue = "";
     private List<String> possibleWords = new ArrayList<>();
+    private Timer autoSendTimer;
+    private Random random = new Random();
     
     public BuildBattleHud() {
         super(false);
@@ -32,10 +37,6 @@ public class BuildBattleHud extends TextHud {
                     line = line.trim();
                     if (!line.isEmpty()) {
                         wordList.add(line.toLowerCase());
-                        String noSpaces = line.replaceAll("\\s+", "").toLowerCase();
-                        if (!noSpaces.equals(line.toLowerCase())) {
-                            wordList.add(noSpaces);
-                        }
                     }
                 }
                 reader.close();
@@ -112,17 +113,23 @@ public class BuildBattleHud extends TextHud {
         String cleanMessage = message.replaceAll("§[0-9a-fk-or]", "");
 
         if (cleanMessage.startsWith("Builder: ") || cleanMessage.startsWith("Welcome back!")) {
-            System.out.println("PASSED 1: " + cleanMessage);
             isWaiting = true;
             currentClue = "";
             possibleWords.clear();
+            if (autoSendTimer != null) {
+                autoSendTimer.cancel();
+                autoSendTimer = null;
+            }
         }
         
         if (message.contains("Want to play again")) {
-            System.out.println("PASSED 2: " + cleanMessage);
             isWaiting = false;
             currentClue = "";
             possibleWords.clear();
+            if (autoSendTimer != null) {
+                autoSendTimer.cancel();
+                autoSendTimer = null;
+            }
         }
     }
     
@@ -134,7 +141,6 @@ public class BuildBattleHud extends TextHud {
         String cleanText = actionBarText.replaceAll("§[0-9a-fk-or]", "");
         
         if (cleanText.contains("theme is")) {
-            System.out.println("PASSED 3: " + cleanText);
             int startPos = cleanText.indexOf("theme is") + "theme is".length();
             String clue = cleanText.substring(startPos).trim();
                 
@@ -158,7 +164,7 @@ public class BuildBattleHud extends TextHud {
             return;
         }
         
-        UChat.chat("§7[Debug] Looking for pattern: " + clue);
+        if (GTBConfig.debugMode) UChat.chat("§7[Debug] Looking for pattern: " + clue);
         possibleWords.clear();
         
         for (String word : wordList) {
@@ -173,13 +179,52 @@ public class BuildBattleHud extends TextHud {
             return a.compareToIgnoreCase(b);
         });
         
-        UChat.chat("§7[Debug] Found " + possibleWords.size() + " matches");
+        if (GTBConfig.debugMode) UChat.chat("§7[Debug] Found " + possibleWords.size() + " matches");
         if (!possibleWords.isEmpty()) {
-            UChat.chat("§7[Debug] First few: " + 
-                String.join(", ", possibleWords.subList(0, Math.min(3, possibleWords.size()))));
+            UChat.chat("§7All possible words: §f" + String.join(", ", possibleWords));
+        }
+        
+        // Auto-send if only one word remains
+        if (GTBConfig.autoSendBestGuess && possibleWords.size() == 1) {
+            scheduleAutoSend(possibleWords.get(0));
+        } else if (autoSendTimer != null) {
+            autoSendTimer.cancel();
+            autoSendTimer = null;
         }
     }
     
+    private void scheduleAutoSend(String word) {
+        // Cancel any existing timer
+        if (autoSendTimer != null) {
+            autoSendTimer.cancel();
+        }
+        
+        // Calculate delay - prefer the lower number if min > max
+        float minDelay = GTBConfig.minimumAutoSenDelay;
+        float maxDelay = GTBConfig.maximumAutoSenDelay;
+        
+        float actualMin = Math.min(minDelay, maxDelay);
+        float actualMax = Math.max(minDelay, maxDelay);
+        
+        // Generate random delay between actualMin and actualMax
+        long delay = (long) (actualMin + (random.nextFloat() * (actualMax - actualMin)));
+        
+        if (GTBConfig.debugMode) {
+            UChat.chat("§7[Debug] Auto-sending '" + word + "' in " + delay + "ms");
+        }
+        
+        autoSendTimer = new Timer();
+        autoSendTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                UChat.say(word);
+                if (GTBConfig.debugMode) {
+                    UChat.chat("§7[Debug] Auto-sent: " + word);
+                }
+            }
+        }, delay);
+    }
+        
     private boolean matchesPattern(String word, String pattern) {
         String normalizedWord = word.toLowerCase();
         String normalizedPattern = pattern.toLowerCase();
@@ -218,5 +263,10 @@ public class BuildBattleHud extends TextHud {
         isWaiting = false;
         currentClue = "";
         possibleWords.clear();
+        
+        if (autoSendTimer != null) {
+            autoSendTimer.cancel();
+            autoSendTimer = null;
+        }
     }
 }
