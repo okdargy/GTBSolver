@@ -1,0 +1,15 @@
+{
+  "compatibilityLevel": "JAVA_8",
+  "minVersion": "0.7",
+  "package": "party.dargy.gtbsolver.mixin",
+  "refmap": "mixins.${id}.refmap.json",
+  "injectors": {
+    "maxShiftBy": 5
+  },
+  "client": [
+    "GuiIngameMixin",
+    "GuiNewChatMixin",
+    "PlayerBlockPlaceMixin"
+  ],
+  "verbose": true
+}
