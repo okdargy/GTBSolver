@@ -392,4 +392,6 @@ gradle-app.setting
 
 # End of https://www.toptal.com/developers/gitignore/api/java,gradle,forgegradle,kotlin,macos,intellij,intellij+all,eclipse,visualstudiocode
 
-versions/
+# Incluidng all versions folders, but excluding the "mainProject" file
+versions/*
+!versions/mainProject
