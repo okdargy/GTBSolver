@@ -2,7 +2,6 @@ package party.dargy.gtbsolver;
 
 import party.dargy.gtbsolver.command.OpenGUICommand;
 import party.dargy.gtbsolver.config.GTBConfig;
-import cc.polyfrost.oneconfig.events.event.InitializationEvent;
 import net.minecraftforge.fml.common.Mod;
 import cc.polyfrost.oneconfig.utils.commands.CommandManager;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
